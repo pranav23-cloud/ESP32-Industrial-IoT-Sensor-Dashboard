@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>DHT11 IoT Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f2f5f9;
+            color: #222;
+        }
+
+        /* Header */
+        .header {
+            background: #1f2937;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+        }
+
+        .header p {
+            margin-top: 8px;
+            color: #cbd5e1;
+        }
+
+        /* Main container */
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        /* Cards container */
+        .cards {
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Sensor card */
+        .card {
+            background: white;
+            width: 320px;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .icon {
+            font-size: 45px;
+            margin-bottom: 10px;
+        }
+
+        .card h2 {
+            margin: 10px 0;
+            color: #374151;
+        }
+
+        .value {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .unit {
+            color: #6b7280;
+            font-size: 18px;
+        }
+
+        /* Temperature */
+        .temperature .value {
+            color: #ef4444;
+        }
+
+        /* Humidity */
+        .humidity .value {
+            color: #2563eb;
+        }
+
+        /* Status */
+        .status {
+            text-align: center;
+            margin-top: 35px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .status-text {
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <div class="header">
+        <h1>🌐 DHT11 IoT Dashboard</h1>
+        <p>ESP32 Sensor Monitoring System</p>
+    </div>
+
+
+    <div class="container">
+
+        <div class="cards">
+
+            <!-- Temperature -->
+            <div class="card temperature">
+
+                <div class="icon">🌡️</div>
+
+                <h2>Temperature</h2>
+
+                <div class="value" id="temperature">
+                    --
+                </div>
+
+                <div class="unit">
+                    °C
+                </div>
+
+            </div>
+
+
+            <!-- Humidity -->
+            <div class="card humidity">
+
+                <div class="icon">💧</div>
+
+                <h2>Humidity</h2>
+
+                <div class="value" id="humidity">
+                    --
+                </div>
+
+                <div class="unit">
+                    %RH
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Status -->
+        <div class="status">
+
+            <p>
+                System Status:
+                <span class="status-text">● ONLINE</span>
+            </p>
+
+            <p id="updated">
+                Waiting for data...
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <footer>
+        DHT11 → ESP32 → ThingSay → Web Dashboard
+    </footer>
+
+
+    <script>
+
+        async function getData() {
+
+            try {
+
+                const response = await fetch("/api/data");
+
+                const data = await response.json();
+
+
+                document.getElementById("temperature").textContent =
+                    data.temperature.value;
+
+
+                document.getElementById("humidity").textContent =
+                    data.humidity.value;
+
+
+                document.getElementById("updated").textContent =
+                    "Last updated: " +
+                    new Date(data.temperature.timestamp).toLocaleString();
+
+            }
+
+            catch (error) {
+
+                document.getElementById("updated").textContent =
+                    "Unable to fetch sensor data";
+
+            }
+
+        }
+
+
+        // Load data immediately
+        getData();
+
+
+        // Update every 5 seconds
+        setInterval(getData, 5000);
+
+    </script>
+
+</body>
+
+</html>
