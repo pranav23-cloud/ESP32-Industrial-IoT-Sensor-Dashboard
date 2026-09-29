@@ -1,242 +1,108 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <title>DHT11 IoT Dashboard</title>
+    <title>IoT Dashboard</title>
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f2f5f9;
-            color: #222;
-        }
-
-        /* Header */
-        .header {
-            background: #1f2937;
-            color: white;
-            padding: 25px;
-            text-align: center;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 32px;
-        }
-
-        .header p {
-            margin-top: 8px;
-            color: #cbd5e1;
-        }
-
-        /* Main container */
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
-        }
-
-        /* Cards container */
-        .cards {
-            display: flex;
-            gap: 25px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        /* Sensor card */
-        .card {
-            background: white;
-            width: 320px;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-            transition: transform 0.2s;
-        }
-
-        .card:hover {
-            transform: translateY(-5px);
-        }
-
-        .icon {
-            font-size: 45px;
-            margin-bottom: 10px;
-        }
-
-        .card h2 {
-            margin: 10px 0;
-            color: #374151;
-        }
-
-        .value {
-            font-size: 48px;
-            font-weight: bold;
-            margin: 15px 0;
-        }
-
-        .unit {
-            color: #6b7280;
-            font-size: 18px;
-        }
-
-        /* Temperature */
-        .temperature .value {
-            color: #ef4444;
-        }
-
-        /* Humidity */
-        .humidity .value {
-            color: #2563eb;
-        }
-
-        /* Status */
-        .status {
-            text-align: center;
-            margin-top: 35px;
-            padding: 15px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
-        }
-
-        .status-text {
-            color: #16a34a;
-            font-weight: bold;
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            margin-top: 50px;
-            padding: 20px;
-            color: #6b7280;
-        }
-    </style>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
 </head>
-
 
 <body>
 
-    <div class="header">
-        <h1>🌐 DHT11 IoT Dashboard</h1>
-        <p>ESP32 Sensor Monitoring System</p>
-    </div>
+    <div class="dashboard">
 
+        <h1>IoT Dashboard</h1>
 
-    <div class="container">
+        <p class="subtitle">
+            ESP32 Sensor Monitoring
+        </p>
 
-        <div class="cards">
+        <div class="sensor-container">
 
-            <!-- Temperature -->
-            <div class="card temperature">
-
-                <div class="icon">🌡️</div>
-
+            <div class="sensor-card">
                 <h2>Temperature</h2>
-
-                <div class="value" id="temperature">
-                    --
+                <div class="value">
+                    <span id="temperature">--</span>
+                    <span class="unit">°C</span>
                 </div>
-
-                <div class="unit">
-                    °C
-                </div>
-
             </div>
 
-
-            <!-- Humidity -->
-            <div class="card humidity">
-
-                <div class="icon">💧</div>
-
+            <div class="sensor-card">
                 <h2>Humidity</h2>
-
-                <div class="value" id="humidity">
-                    --
+                <div class="value">
+                    <span id="humidity">--</span>
+                    <span class="unit">%</span>
                 </div>
+            </div>
 
-                <div class="unit">
-                    %RH
+            <div class="sensor-card">
+                <h2>Distance</h2>
+                <div class="value">
+                    <span id="distance">--</span>
+                    <span class="unit">cm</span>
                 </div>
-
             </div>
 
         </div>
 
-
-        <!-- Status -->
-        <div class="status">
-
-            <p>
-                System Status:
-                <span class="status-text">● ONLINE</span>
-            </p>
-
-            <p id="updated">
-                Waiting for data...
-            </p>
-
+        <div class="status-box">
+            Status:
+            <span id="status">Connecting...</span>
         </div>
 
     </div>
-
-
-    <footer>
-        DHT11 → ESP32 → ThingSay → Web Dashboard
-    </footer>
 
 
     <script>
 
-        async function getData() {
+        function getSensorData() {
 
-            try {
+            fetch("/api/sensors")
 
-                const response = await fetch("/api/data");
+                .then(response => response.json())
 
-                const data = await response.json();
+                .then(data => {
+
+                    document.getElementById("temperature").textContent =
+                        data.temperature ?? "--";
+
+                    document.getElementById("humidity").textContent =
+                        data.humidity ?? "--";
+
+                    document.getElementById("distance").textContent =
+                        data.distance ?? "--";
 
 
-                document.getElementById("temperature").textContent =
-                    data.temperature.value;
+                    if (data.online) {
 
+                        document.getElementById("status").textContent =
+                            "ESP32 Online";
 
-                document.getElementById("humidity").textContent =
-                    data.humidity.value;
+                    } else {
 
+                        document.getElementById("status").textContent =
+                            "ESP32 Offline";
+                    }
 
-                document.getElementById("updated").textContent =
-                    "Last updated: " +
-                    new Date(data.temperature.timestamp).toLocaleString();
+                })
 
-            }
+                .catch(error => {
 
-            catch (error) {
+                    console.error("Error:", error);
 
-                document.getElementById("updated").textContent =
-                    "Unable to fetch sensor data";
-
-            }
-
+                    document.getElementById("status").textContent =
+                        "Backend Error";
+                });
         }
 
 
-        // Load data immediately
-        getData();
+        getSensorData();
 
-
-        // Update every 5 seconds
-        setInterval(getData, 5000);
+        setInterval(getSensorData, 5000);
 
     </script>
 
 </body>
-
 </html>
